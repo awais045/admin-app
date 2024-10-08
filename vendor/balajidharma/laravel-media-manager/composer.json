@@ -1,0 +1,31 @@
+{
+    "name": "balajidharma/laravel-media-manager",
+    "description": "Laravel media manager",
+    "license": "MIT",
+    "keywords": ["media","laravel","laravel-media", "media-manager", "laravel-media-manager"],
+    "authors": [
+        {
+            "name": "Balaji Dharmaraja",
+            "homepage": "https://github.com/balajidharma"
+        }
+    ],
+    "require": {
+        "illuminate/support": "^10.0|^11.0",
+        "plank/laravel-mediable": "^6.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "BalajiDharma\\LaravelMediaManager\\": "src"
+        },
+        "files": [
+            "src/helpers.php"
+        ]
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "BalajiDharma\\LaravelMediaManager\\MediaManagerServiceProvider"
+            ]
+        }
+    }
+}
