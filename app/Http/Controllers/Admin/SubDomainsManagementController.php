@@ -14,6 +14,10 @@ use BalajiDharma\LaravelFormBuilder\FormBuilder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
+use Illuminate\Http\Client\Request as MyRequest;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 
 class SubDomainsManagementController extends Controller
 {
@@ -30,7 +34,7 @@ class SubDomainsManagementController extends Controller
         $users = (new SubDomain)->newQuery();
 
         if (request()->has('search')) {
-            $users->where('name', 'Like', '%'.request()->input('search').'%');
+            $users->where('name', 'Like', '%' . request()->input('search') . '%');
         }
 
         if (request()->query('sort')) {
@@ -73,41 +77,87 @@ class SubDomainsManagementController extends Controller
      *
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function store( Request $request)
+    public function store(Request $request)
     {
+
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:255',
+            'domain_name' => [
+                'required',
+                'string',
+                'max:255',
+                'regex:/^[a-zA-Z0-9]+$/',
+            ],
+            'db_name' => 'required|string|max:255',
+            'hostname' => $request->db_type === 'remote' ? 'required|string|max:255' : 'nullable',
+            'db_user' => $request->db_type === 'remote' ? 'required|string|max:255' : 'nullable',
+            'db_password' => $request->db_type === 'remote' ? 'required|string|max:255' : 'nullable',
+            'subdomain_type' => 'required',
+            'is_active' => 'boolean',
+        ]);
+
+        if ($validator->fails()) {
+            return redirect()->route('admin.sub-domains.create')
+            ->with('message', $validator->errors());
+            // return response()->json(['errors' => $validator->errors()], 422);
+        }
+
         // $this->authorize('adminCreate', User::class);
         // $userCreateAction->handle($data);
+
+        // $user = SubDomain::create([
+        //     'subdomain' => $request->subdomain,
+        //     'domain_name' => $request->domain_name,
+        //     'db_name' => $request->db_name,
+        //     'is_active' => $request->is_active,
+        //     'name' => $request->name,
+        // ]);
+        DB::beginTransaction();
 
         $user = SubDomain::create([
             'subdomain' => $request->subdomain,
             'domain_name' => $request->domain_name,
             'db_name' => $request->db_name,
+            'hostname' => $request->hostname,       // New field
+            'domain_dns1' => $request->domain_dns1,       // New field
+            'domain_dns2' => $request->domain_dns2,       // New field
+            'db_user' => $request->db_user,         // New field
+            'db_password' => $request->db_password, // New field
+            'subdomain_type' => $request->subdomain_type, // New field for DNS1/DNS2
             'is_active' => $request->is_active,
             'name' => $request->name,
         ]);
-        $url = 'https://vwrjauqquwby2lasyumga4x6ki0jyrfh.lambda-url.us-west-1.on.aws/';
 
+        $insertedId = $user->id;
+        $url = 'https://vwrjauqquwby2lasyumga4x6ki0jyrfh.lambda-url.us-west-1.on.aws/';
+        // $url = 'https://vwrjauqquwby2sdsadsadalasyumga4x6ki0jyrfh.lambda-ad.us-wesdasdt-1.on.aws/';
         $data = [
             "database_name" => $request->db_name,
             "email" => "super_admin@gmail.com",
             "debug" => false
         ];
-        $ch = curl_init($url);
+        $data = [
+            'database_name' => $request->db_name,
+            'email' => 'super_admin@gmail.com',
+            'debug' => 'False', // Use single quotes for string values
+        ];
+        try {
+            $response = Http::withHeaders([
+                'Content-Type' => 'application/json',
+            ])->post('https://vwrjauqquwby2sdsadsadalasyumga4x6ki0jyrfh.lambda-ad.us-wesdasdt-1.on.aws/', $data);
 
-        curl_setopt($ch,  CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
-
-        $response = curl_exec($ch);
-
-        curl_close($ch);
-
-        // You can decode the response if needed
-        $response = json_decode($response, true);
-        dd($response);
-        // Do something with the response
-
+            if ($response->successful()) {
+                $message =  'Data sent successfully!';
+            } else {
+                $message = 'Failed to send data! Error: ' . $response->status();
+            }
+        } catch (\Exception $e) {
+            $message = 'An error occurred: ' . $e->getMessage();
+        }
+        SubDomain::where('id', $insertedId)->update([
+            'lamda_response' =>$message
+        ]);
+        DB::commit();
         return redirect()->route('admin.sub-domains.index')
             ->with('message', __('Sub Domain created successfully.'));
     }
@@ -117,12 +167,11 @@ class SubDomainsManagementController extends Controller
      *
      * @return \Illuminate\View\View
      */
-    public function show(User $user)
+    public function show(SubDomain $user)
     {
         $this->authorize('adminView', $user);
         $roles = Role::all();
-        $userHasRoles = array_column(json_decode($user->roles, true), 'id');
-
+        // $userHasRoles = array_column(json_decode($user->roles, true), 'id');
         return view('admin.sub-domains.show', compact('user', 'roles', 'userHasRoles'));
     }
 
@@ -131,11 +180,11 @@ class SubDomainsManagementController extends Controller
      *
      * @return \Illuminate\View\View
      */
-    public function edit(User $user, FormBuilder $formBuilder)
+    public function edit(SubDomain $user, $id,FormBuilder $formBuilder)
     {
-        $this->authorize('adminUpdate', $user);
-
-        $form = $formBuilder->create(\App\Forms\Admin\UserForm::class, [
+        $user = SubDomain::find($id);
+        // $this->authorize('adminUpdate', $user);
+        $form = $formBuilder->create(\App\Forms\Admin\SubDomainForm::class, [
             'method' => 'PUT',
             'url' => route('admin.sub-domains.update', $user->id),
             'model' => $user,
@@ -194,7 +243,7 @@ class SubDomainsManagementController extends Controller
     {
         $request->validateWithBag('account', [
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,'.\Auth::user()->id],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . \Auth::user()->id],
         ]);
 
         $user = \Auth::user()->update($request->except(['_token']));
@@ -227,7 +276,8 @@ class SubDomainsManagementController extends Controller
             }
             if (! Hash::check($request->input('old_password'), \Auth::user()->password)) {
                 $validator->errors()->add(
-                    'old_password', __('Old password is incorrect.')
+                    'old_password',
+                    __('Old password is incorrect.')
                 );
             }
         });
