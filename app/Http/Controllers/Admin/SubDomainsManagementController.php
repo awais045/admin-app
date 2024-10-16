@@ -21,7 +21,7 @@ use Illuminate\Support\Facades\Validator;
 
 class SubDomainsManagementController extends Controller
 {
-    protected $title = 'Users';
+    protected $title = 'Sub-Domains';
 
     /**
      * Display a listing of the resource.
@@ -180,18 +180,24 @@ class SubDomainsManagementController extends Controller
      *
      * @return \Illuminate\View\View
      */
-    public function edit(SubDomain $user, $id,FormBuilder $formBuilder)
+    public function edit( SubDomain $subdomain, $id,FormBuilder $formBuilder)
     {
-        $user = SubDomain::find($id);
-        // $this->authorize('adminUpdate', $user);
+        $subdomain = SubDomain::find($id);
         $form = $formBuilder->create(\App\Forms\Admin\SubDomainForm::class, [
             'method' => 'PUT',
-            'url' => route('admin.sub-domains.update', $user->id),
-            'model' => $user,
+            'url' => route('admin.sub-domains.update', $subdomain->id), // using $subdomain instead of $user
+            'model' => $subdomain, // bind the subdomain model to the form
+            'subdomain1' => $subdomain, // bind the subdomain model to the form
         ]);
+        // $this->authorize('adminUpdate', $user);
+        // $form = $formBuilder->create(\App\Forms\Admin\SubDomainForm::class, [
+        //     'method' => 'PUT',
+        //     'url' => route('admin.sub-domains.update', $user->id),
+        //     'model' => $user,
+        // ]);
         $title = $this->title;
 
-        return view('admin.form.edit', compact('form', 'title'));
+        return view('admin.sub-domains.edit', compact('form', 'title','subdomain'));
     }
 
     /**
