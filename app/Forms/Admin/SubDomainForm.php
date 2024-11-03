@@ -7,67 +7,54 @@ use BalajiDharma\LaravelFormBuilder\Form;
 
 class SubDomainForm extends Form
 {
-    protected $showFieldErrors = false;
+    protected $showFieldErrors = true;
 
     public function buildForm()
     {
-        // $roles = Role::all();
-        // $userHasRoles = [];
-
-        // if ($this->model) {
-        //     $userHasRoles = array_column(json_decode($this->model->roles, true), 'name');
-        // }
 
         $this->add('name', 'text', [
-            'label' => __('Client Name'),
+            'label' => __('Client Name *'),
             'value' => '',
         ]);
-
+        $this->add('subdomain', 'text', [
+            'label' => __('Domain Name *'),
+            'value' => '',
+            'pattern' => '^[a-zA-Z0-9]+$',
+            'title' => "Domain name must be a single word without spaces or special characters.",
+        ]);
         $this->add('domain_name', 'text', [
-            'label' => __('Domain Name'),
+            'label' => __('Domain URL *'),
             'value' => '',
         ]);
-
-
         $this->add('subdomain_type', 'select', [
-            'label' => __('Domain Type'),
+            'label' => __('Domain Type *'),
             'choices' => [
-                '' => 'Select',
                 'local' => 'Internal',
                 'remote' => 'External',
             ],
             'value' => '',
         ]);
-        $this->add('subdomain', 'text', [
-            'label' => __('Domain URL'),
-            'value' => '',
-            'pattern' => '^[a-zA-Z0-9]+$',
-            'title' => "Domain name must be a single word without spaces or special characters.",
-        ]);
 
-        $this->add('domain_dns1', 'text', [
-            'label' => __('Domain DNS1'),
-            'value' => '',
-            'attributes' => ['id' => 'domain_dns1'], // For JS handling
-        ]);
+        // $this->add('domain_dns1', 'text', [
+        //     'label' => __('Domain DNS1'),
+        //     'value' => '',
+        //     'attributes' => ['id' => 'domain_dns1'], // For JS handling
+        // ]);
 
-        $this->add('domain_dns2', 'text', [
-            'label' => __('Domain DNS2'),
-            'value' => '',
-            'attributes' => ['id' => 'domain_dns2'], // For JS handling
-        ]);
-
-
+        // $this->add('domain_dns2', 'text', [
+        //     'label' => __('Domain DNS2'),
+        //     'value' => '',
+        //     'attributes' => ['id' => 'domain_dns2'], // For JS handling
+        // ]);
 
         $this->add('db_name', 'text', [
-            'label' => __('Database Name'),
+            'label' => __('Database Name *'),
             'value' => '',
         ]);
 
         $this->add('db_type', 'select', [
-            'label' => __('Database Type'),
+            'label' => __('Database Type *'),
             'choices' => [
-                '' => 'Select',
                 'local' => 'Local',
                 'remote' => 'Remote',
             ],
@@ -91,8 +78,6 @@ class SubDomainForm extends Form
             // 'value' => 'db_password',
             'attributes' => ['id' => 'db_password'], // For JS handling
         ]);
-
-
 
         $this->add('is_active', 'checkbox', [
             'label' => __('Enabled'),

@@ -5,7 +5,7 @@
     </label>
     <li class="mb-2 font-semibold text-xl">
         <a href="{{ route('admin.dashboard') }}">
-            <x-application-logo class="block h-9 w-auto fill-current" />Admin Panel
+            <x-application-logo class="block h-9 w-auto fill-current" />Cyberaptglobal Admin
         </a>
     </li>
     @foreach($menus as $menu)
@@ -27,4 +27,3 @@
     @endforeach
 </ul>
 @endisset
-    

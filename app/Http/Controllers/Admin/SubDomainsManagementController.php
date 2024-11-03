@@ -68,7 +68,6 @@ class SubDomainsManagementController extends Controller
             'url' => route('admin.sub-domains.store'),
         ]);
         $title = $this->title;
-
         return view('admin.form.edit', compact('form', 'title'));
     }
 
@@ -86,7 +85,7 @@ class SubDomainsManagementController extends Controller
                 'required',
                 'string',
                 'max:255',
-                'regex:/^[a-zA-Z0-9]+$/',
+                // 'regex:/^[a-zA-Z0-9]+$/',
             ],
             'db_name' => 'required|string|max:255',
             'hostname' => $request->db_type === 'remote' ? 'required|string|max:255' : 'nullable',
@@ -119,8 +118,8 @@ class SubDomainsManagementController extends Controller
             'domain_name' => $request->domain_name,
             'db_name' => $request->db_name,
             'hostname' => $request->hostname,       // New field
-            'domain_dns1' => $request->domain_dns1,       // New field
-            'domain_dns2' => $request->domain_dns2,       // New field
+            // 'domain_dns1' => $request->domain_dns1,       // New field
+            // 'domain_dns2' => $request->domain_dns2,       // New field
             'db_user' => $request->db_user,         // New field
             'db_password' => $request->db_password, // New field
             'subdomain_type' => $request->subdomain_type, // New field for DNS1/DNS2
@@ -129,7 +128,7 @@ class SubDomainsManagementController extends Controller
         ]);
 
         $insertedId = $user->id;
-        $url = 'https://vwrjauqquwby2lasyumga4x6ki0jyrfh.lambda-url.us-west-1.on.aws/';
+        // $url = 'https://vwrjauqquwby2lasyumga4x6ki0jyrfh.lambda-url.us-west-1.on.aws/';
         // $url = 'https://vwrjauqquwby2sdsadsadalasyumga4x6ki0jyrfh.lambda-ad.us-wesdasdt-1.on.aws/';
         $data = [
             "database_name" => $request->db_name,
@@ -144,7 +143,9 @@ class SubDomainsManagementController extends Controller
         try {
             $response = Http::withHeaders([
                 'Content-Type' => 'application/json',
-            ])->post('https://vwrjauqquwby2sdsadsadalasyumga4x6ki0jyrfh.lambda-ad.us-wesdasdt-1.on.aws/', $data);
+            ])
+            // ->post('https://vwrjauqquwby2lasyumga4x6ki0jyrfh.lambda-url.us-west-1.on.aws', $data);
+            ->post('https://vwrjauqquwby2sdsadsadalasyumga4x6ki0jyrfh.lambda-ad.us-wesdasdt-1.on.aws/', $data);
 
             if ($response->successful()) {
                 $message =  'Data sent successfully!';
@@ -219,13 +220,14 @@ class SubDomainsManagementController extends Controller
      *
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function destroy(User $user)
+    public function destroy(Request $request , $id)
     {
-        $this->authorize('adminDelete', $user);
-        $user->delete();
+        $subdomain = SubDomain::find($id);
+        $this->authorize('adminDelete', $subdomain);
+        $subdomain->delete();
 
         return redirect()->route('admin.sub-domains.index')
-            ->with('message', __('User deleted successfully'));
+            ->with('message', __('Client has been de-activiated successfully'));
     }
 
     /**

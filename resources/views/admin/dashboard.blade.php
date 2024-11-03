@@ -8,6 +8,7 @@
             <div class="overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-base-900">
                     You're logged in!
+
                 </div>
             </div>
         </div>
